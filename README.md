@@ -1,30 +1,71 @@
 # Calculon
 
-TODO: Write a gem description
+Calculon provides aggregate time functions for ActiveRecord.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
+```ruby
     gem 'calculon'
+```
 
 And then execute:
 
+```
     $ bundle
+```
 
 Or install it yourself as:
 
+```
     $ gem install calculon
+```
 
 ## Usage
+Calculon allows you to group attributes using aggregate functions (sum, avg, min, max, etc) into time buckets (minute, hour, day, month, year).  These buckets are "calendar" size - for instance, "by hour" means between absolute clock hours rather than a relative "within last 60 minutes, between 60-120 minutes ago, etc."
 
-calculon_view :ctr, :participants => :sum, :conversions => :sum
-default_time_column :created_at
+Let's say you have a Game model with two columns, one for Team A's points and the other for Team B's points.
 
-## Contributing
+```ruby
+class Game
+    :attr_accessible :team_a_points, team_b_points
+end
+```
 
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+And now you want to know the total points for both teams by day:
+
+```ruby
+Game.by_day(:team_a_points => :sum, :team_b_points => :sum)
+```
+
+Awesome.  Now let's say you want to know the average yesterday where Team A scored more than 0 points:
+
+```ruby
+Game.by_day(:team_a_points => :avg, :team_b_points => :avg).on(Date.yesterday).where('team_a_points > 0')
+```
+
+Now say you hate typing, and want to get points more easily:
+
+```ruby
+class Game
+    calculon_view :points, :team_a_points => :sum, :team_b_points => :sum
+end
+```
+
+Now, you can get point sums more naturally:
+
+```ruby
+Game.points_by_day
+Game.points_by_month.where('team_a_points > 0')
+Game.points_by_year
+```
+
+Let's say, however, that you want to know points by hour, but you want to get 24 results, regardless of whether or not a team scored (i.e., you want to fill in the "missing" hours):
+
+```ruby
+nogame = OpenStruct.new(:team_a_points => 0, :team_b_points => 0)
+Game.points_by_hour.on(Date.yesterday).to_filled_a(nogame)
+```
+
+This will return an array of length 24, with "nogame" filling in each hour for which there was no game.

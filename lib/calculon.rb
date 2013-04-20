@@ -51,10 +51,7 @@ module Calculon
     def on(date, opts=nil)
       opts = default_calculon_opts.merge(opts || {})
       raise "'on' method takes a Date object as the first param" unless date.is_a?(Date)
-      relation = where ["#{opts[:time_column]} >= ? and #{opts[:time_column]} < ?", date.to_time, (date + 1.day).to_time]
-      relation.calculon_opts ||= {}
-      relation.calculon_opts.merge!(:starttime => date.to_time, :endtime => (date + 1.day).to_time)
-      relation      
+      between date.to_time, date.to_time + 86399.seconds
     end
 
     def between(starttime, endtime, opts=nil)
