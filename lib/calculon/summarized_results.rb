@@ -49,8 +49,8 @@ module Calculon
       increment = increment_amounts[@bucket_size]
 
       # get the "floor" of the start and end times (the "floor" bucket)
-      current = Time.parse(@start_time.strftime(time_format + " %z"))
-      last_time = Time.parse(@end_time.strftime(time_format + " %z"))
+      current = Time.zone.parse(@start_time.strftime(time_format + " %z"))
+      last_time = Time.zone.parse(@end_time.strftime(time_format + " %z"))
 
       while current <= last_time
         yield current.strftime(time_format)

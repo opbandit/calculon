@@ -7,19 +7,19 @@ Calculon provides aggregate time functions for ActiveRecord.
 Add this line to your application's Gemfile:
 
 ```ruby
-    gem 'calculon'
+gem 'calculon'
 ```
 
 And then execute:
 
 ```
-    $ bundle
+$ bundle
 ```
 
 Or install it yourself as:
 
 ```
-    $ gem install calculon
+$ gem install calculon
 ```
 
 ## Usage
@@ -29,7 +29,7 @@ Let's say you have a Game model with two columns, one for Team A's points and th
 
 ```ruby
 class Game
-    :attr_accessible :team_a_points, team_b_points
+    attr_accessible :team_a_points, :team_b_points
 end
 ```
 
@@ -56,7 +56,7 @@ end
 Now, you can get point sums more naturally:
 
 ```ruby
-Game.points_by_day
+Game.points_by_day.on(Date.yesterday)
 Game.points_by_month.where('team_a_points > 0')
 Game.points_by_year
 ```
