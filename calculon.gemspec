@@ -7,9 +7,9 @@ Gem::Specification.new do |gem|
   gem.version       = Calculon::VERSION
   gem.authors       = ["Brian Muller"]
   gem.email         = ["bamuller@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
-  gem.homepage      = ""
+  gem.description   = %q{Calculon provides aggregate time functions for ActiveRecord.}
+  gem.summary       = %q{Calculon provides aggregate time functions for ActiveRecord.}
+  gem.homepage      = "https://github.com/opbandit/calculon"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
