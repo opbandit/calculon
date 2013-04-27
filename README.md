@@ -29,7 +29,7 @@ Let's say you have a Game model with two columns, one for Team A's points and th
 
 ```ruby
 class Game
-    attr_accessible :team_a_points, :team_b_points
+  attr_accessible :team_a_points, :team_b_points
 end
 ```
 
@@ -39,7 +39,9 @@ And now you want to know the total points for both teams by day:
 Game.by_day(:team_a_points => :sum, :team_b_points => :sum)
 ```
 
-Awesome.  Now let's say you want to know the average yesterday where Team A scored more than 0 points:
+This will return an array of Game instances where team_a_points and team_b_points are the sums per hour (the attribute time_bucket will give you the name of each bucket).
+
+Now let's say you want to know the average yesterday where Team A scored more than 0 points:
 
 ```ruby
 Game.by_day(:team_a_points => :avg, :team_b_points => :avg).on(Date.yesterday).where('team_a_points > 0')
@@ -49,7 +51,7 @@ Now say you hate typing, and want to get points more easily:
 
 ```ruby
 class Game
-    calculon_view :points, :team_a_points => :sum, :team_b_points => :sum
+  calculon_view :points, :team_a_points => :sum, :team_b_points => :sum
 end
 ```
 
@@ -69,3 +71,6 @@ Game.points_by_hour.on(Date.yesterday).to_filled_a(nogame)
 ```
 
 This will return an array of length 24, with "nogame" filling in each hour for which there was no game.
+
+## Supported Databases
+Right now, mysql2 is the only supported DB interface supported.

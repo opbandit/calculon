@@ -1,6 +1,10 @@
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
 require 'bundler/gem_tasks'
 require 'rake/testtask'
-require 'rdoc/task'
+require 'yard'
+require 'calculon/version'
 
 Rake::TestTask.new("test") { |t|
   t.libs += ["lib", "."]
@@ -10,9 +14,7 @@ Rake::TestTask.new("test") { |t|
 
 task :default => [:test]
 
-RDoc::Task.new("doc") { |rdoc|
-  rdoc.title = "Calculon - aggregate methods for models for Rails"
-  rdoc.rdoc_dir = 'docs'
-  rdoc.rdoc_files.include('README.md')
-  rdoc.rdoc_files.include('lib/**/*.rb')
-}
+YARD::Rake::YardocTask.new(:doc) do |task|
+  task.files  = FileList["lib/**/*.rb"]
+  task.options = "--output", "docs", "--title", "Calculon #{Calculon::VERSION}", "--main", "README.md"
+end
