@@ -1,25 +1,7 @@
 require "calculon/version"
 require 'calculon/railtie'
-require 'calculon/summarized_results'
-
-module ActiveRecord
-  module QueryMethods
-    attr_accessor :calculon_opts
-  end
-
-  class Relation
-    def to_results_hash
-      if(calculon_opts.nil?)
-        raise "Not a Calculon Relation: You must call by_day/by_hour/etc before you can call to_hash"
-      end
-      Calculon::SummarizedResults.new(self)
-    end
-
-    def to_filled_a(default=nil)
-      to_results_hash.fill_missing!(default).to_a
-    end
-  end
-end
+require 'calculon/results'
+require 'calculon/ext'
 
 module Calculon
   def self.included(base)
@@ -33,7 +15,8 @@ module Calculon
         [ "minute", "hour", "day", "month", "year" ].each do |window|
           define_method("#{name}_by_#{window}") { |nopts=nil|
             nopts = (opts || {}).merge(nopts || {})
-            send("by_#{window}".intern, cols, nopts)
+            # clone cols so modifications downstream don't affect our original copy here
+            send("by_#{window}".intern, cols.clone, nopts)
           }
         end
       end
@@ -45,7 +28,7 @@ module Calculon
 
     def default_calculon_opts
       @@calculon_time_column ||= "created_at"
-      { :time_column => @@calculon_time_column, :bycols => [] }
+      { :time_column => @@calculon_time_column, :group_by => [] }
     end
 
     def on(date, opts=nil)
@@ -85,6 +68,8 @@ module Calculon
 
     def by_bucket(bucket_name, bucket, cols, opts=nil)
       opts = default_calculon_opts.merge(opts || {})
+      # allow group by to be either single symbol or array of symbols
+      opts[:group_by] = [opts[:group_by]].flatten
 
       unless ActiveRecord::Base.connection.adapter_name == "Mysql2"
         raise "Mysql2 is the only supported connection adapter for calculon"
@@ -98,8 +83,8 @@ module Calculon
       bucket = bucket % { :time_column => time_column }
 
       # if we're grouping by other columns, we need to select them
-      groupby = opts[:bycols] + ["time_bucket"]
-      opts[:bycols].each { |c| cols[c] = nil }
+      groupby = opts[:group_by] + ["time_bucket"]
+      opts[:group_by].each { |c| cols[c] = nil }
       cols = cols.map { |name,method| 
         asname = name.to_s.gsub(' ', '').tr('^A-Za-z0-9', '_')
         method.nil? ? name : "#{method}(#{name}) as #{asname}" 

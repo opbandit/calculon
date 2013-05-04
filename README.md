@@ -66,11 +66,43 @@ Game.points_by_year
 Let's say, however, that you want to know points by hour, but you want to get 24 results, regardless of whether or not a team scored (i.e., you want to fill in the "missing" hours):
 
 ```ruby
+# first, get the buckets out
+buckets = Game.points_by_hour.on(Date.yesterday).to_buckets
+
+# then, convert to array with filled values
 nogame = OpenStruct.new(:team_a_points => 0, :team_b_points => 0)
-Game.points_by_hour.on(Date.yesterday).to_filled_a(nogame)
+buckets.to_a(nogame)
 ```
 
 This will return an array of length 24, with "nogame" filling in each hour for which there was no game.
+
+### Multiple Grouping Columns
+If you want to be able to group by other columns per time period, you can do that as well.
+
+```ruby
+# the :group_by option takes either a single additional column or an array of columns
+buckets = Game.points_by_hour(:group_by => :bracket_id).on(Date.yesterday).to_buckets
+
+# see all of the unique grouping values
+buckets.groupings
+#=> { :bracket_id => 1, :bracket_id => 2 }
+
+# get all of the time values for just bracket_id 1.  Since this was by day, there will
+# be 24 of them
+buckets.values_for(:bracket_id => 1)
+#=> [ #<Game ...>, #<Game ...>, ... ]
+
+buckets.values_for(:bracket_id => 2)
+#=> [ #<Game ...>, #<Game ...>, ... ]
+
+# now, try one that doesn't exist
+buckets.values_for(:bracket_id => 100)
+#=> [ nil, nil, ... ]
+
+# now, try one that doesn't exist, but w/ default value
+buckets.values_for({:bracket_id => 100}, OpenStruct.new(:points => 0))
+#=> [ #<OpenStruct points=0>, #<OpenStruct points=0>, ... ]
+```
 
 ## Supported Databases
 Right now, mysql2 is the only supported DB interface supported.

@@ -37,18 +37,18 @@ class CalculonTest < Test::Unit::TestCase
     Game.create(:team_a_points => 30, :team_b_points => 40, :created_at => 2.hours.ago)
 
     assert_equal Game.by_hour(:team_a_points => :sum).length, 2
-    results = Game.points_by_hour.to_results_hash
+    results = Game.points_by_hour.to_buckets
     keys = [33.hours.ago.strftime("%Y-%m-%d %H:00:00"), 2.hours.ago.strftime("%Y-%m-%d %H:00:00")]
     assert_equal keys, results.keys.sort
-    assert_equal results[keys.first].team_a_points, 10 
-    assert_equal results[keys.last].team_b_points, 40 
+    assert_equal results[keys.first].first.team_a_points, 10 
+    assert_equal results[keys.last].first.team_b_points, 40 
 
     assert_equal Game.by_day(:team_a_points => :sum).length, 2
-    results = Game.points_by_day.to_results_hash
+    results = Game.points_by_day.to_buckets
     keys = [33.hours.ago.strftime("%Y-%m-%d 00:00:00"), 2.hours.ago.strftime("%Y-%m-%d 00:00:00")]
     assert_equal keys, results.keys.sort
-    assert_equal results[keys.first].team_a_points, 10 
-    assert_equal results[keys.last].team_b_points, 40     
+    assert_equal results[keys.first].first.team_a_points, 10 
+    assert_equal results[keys.last].first.team_b_points, 40     
   end
 
   def test_results_hash_missing
