@@ -79,7 +79,7 @@ module Calculon
       # that fall on both sides of a date - so group by this conversion.  The 'where' doesn't
       # need this conversion because Rails does this automatically before calling the query
       # (see http://api.rubyonrails.org/classes/ActiveRecord/Base.html#method-c-default_timezone)
-      time_column = "CONVERT_TZ(#{opts[:time_column]}, '+00:00', '#{Time.zone.formatted_offset}')"
+      time_column = "CONVERT_TZ(#{opts[:time_column]}, '+00:00', '#{Time.zone.now.formatted_offset}')"
       bucket = bucket % { :time_column => time_column }
 
       # if we're grouping by other columns, we need to select them
