@@ -11,17 +11,17 @@ module Calculon
       @grouped_by = relation.calculon_opts[:group_by] || []
       @grouped_by_values = Set.new
 
-      @start_time = relation.calculon_opts[:starttime] || keys.sort.first
-      @start_time = @start_time.to_time if @start_time.is_a?(Date)
-
-      @end_time = relation.calculon_opts[:endtime] || keys.sort.last
-      @end_time = @end_time.to_time if @end_time.is_a?(Date)
-
       relation.to_a.each { |row|
         # Keep track of all of the unique column values for the group_by cols
         @grouped_by_values.add @grouped_by.inject({}) { |h,col| h[col] = row.send(col); h }
         self[row.time_bucket] = fetch(row.time_bucket, []) + [ row ]
       }
+
+      @start_time = relation.calculon_opts[:starttime] || Time.zone.parse(keys.sort.first)
+      @start_time = @start_time.to_time if @start_time.is_a?(Date)
+
+      @end_time = relation.calculon_opts[:endtime] || Time.zone.parse(keys.sort.last)
+      @end_time = @end_time.to_time if @end_time.is_a?(Date)
     end
 
     def self.create(relation)
