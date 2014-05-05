@@ -7,13 +7,13 @@ module Calculon
   def self.included(base)
     base.extend(ClassMethods)
   end
-  
+
   module ClassMethods
-    def calculon_view(name, cols, opts=nil)
+    def calculon_view(name, cols, opts = nil)
       metaclass = class << self; self; end
       metaclass.instance_eval do
-        [ "minute", "hour", "day", "month", "year" ].each do |window|
-          define_method("#{name}_by_#{window}") { |nopts=nil|
+        ["minute", "hour", "day", "month", "year"].each do |window|
+          define_method("#{name}_by_#{window}") { |nopts = nil|
             nopts = (opts || {}).merge(nopts || {})
             # clone cols so modifications downstream don't affect our original copy here
             send("by_#{window}".intern, cols.clone, nopts)
@@ -31,13 +31,12 @@ module Calculon
       { :time_column => @@calculon_time_column, :group_by => [] }
     end
 
-    def on(date, opts=nil)
-      opts = default_calculon_opts.merge(opts || {})
+    def on(date)
       raise "'on' method takes a Date object as the first param" unless date.is_a?(Date)
       between date.to_time, date.to_time + 86399.seconds
     end
 
-    def between(starttime, endtime, opts=nil)
+    def between(starttime, endtime, opts = nil)
       opts = default_calculon_opts.merge(opts || {})
       relation = where ["#{opts[:time_column]} >= ? and #{opts[:time_column]} <= ?", starttime, endtime]
       relation.calculon_opts ||= {}
@@ -45,28 +44,28 @@ module Calculon
       relation
     end
 
-    def by_minute(cols, opts=nil)
+    def by_minute(cols, opts = nil)
       tcol = "concat(date(%{time_column}),' ',lpad(hour(%{time_column}),2,'0'),':',lpad(minute(%{time_column}),2,'0'),':00')"
       by_bucket :minute, tcol, cols, opts
     end
 
-    def by_hour(cols, opts=nil)
+    def by_hour(cols, opts = nil)
       by_bucket :hour, "concat(date(%{time_column}),' ',lpad(hour(%{time_column}),2,'0'),':00:00')", cols, opts
     end
 
-    def by_day(cols, opts=nil)
+    def by_day(cols, opts = nil)
       by_bucket :day, "concat(date(%{time_column}),' 00:00:00')", cols, opts
     end
 
-    def by_month(cols, opts=nil)
+    def by_month(cols, opts = nil)
       by_bucket :month, "concat(year(%{time_column}),'-',lpad(month(%{time_column}),2,'0'),'-01 00:00:00')", cols, opts
     end
 
-    def by_year(cols, opts=nil)
+    def by_year(cols, opts = nil)
       by_bucket :year, "concat(year(%{time_column}),'-01-01 00:00:00')", cols, opts
     end
 
-    def by_bucket(bucket_name, bucket, cols, opts=nil)
+    def by_bucket(bucket_name, bucket, cols, opts = nil)
       opts = default_calculon_opts.merge(opts || {})
       # allow group by to be either single symbol or array of symbols
       opts[:group_by] = [opts[:group_by]].flatten
@@ -85,10 +84,10 @@ module Calculon
       # if we're grouping by other columns, we need to select them
       groupby = opts[:group_by] + ["time_bucket"]
       opts[:group_by].each { |c| cols[c] = nil }
-      cols = cols.map { |name,method| 
+      cols = cols.map { |name, method|
         asname = name.to_s.gsub(' ', '').tr('^A-Za-z0-9', '_')
-        method.nil? ? name : "#{method}(#{name}) as #{asname}" 
-      } + [ "#{bucket} as time_bucket" ]
+        method.nil? ? name : "#{method}(#{name}) as #{asname}"
+      } + ["#{bucket} as time_bucket"]
 
       relation = select(cols.join(",")).group(*groupby).order("time_bucket ASC")
       relation.calculon_opts ||= {}

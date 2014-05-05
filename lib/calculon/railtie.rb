@@ -1,5 +1,4 @@
 module Calculon
-
   class Railtie < Rails::Railtie
     initializer 'calculon.insert_into_active_record' do
       ActiveSupport.on_load :active_record do
@@ -7,5 +6,4 @@ module Calculon
       end
     end
   end
-
 end
